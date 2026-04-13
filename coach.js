@@ -88,9 +88,21 @@ PROFIL :
 - Durée de séance : ${profile.duration || '1 heure'}
 - Restrictions alimentaires : ${profile.diet || 'Aucune'}
  
+RÈGLES STRICTES :
+- Durée séance : \${profile.duration || '1 heure'} → RESPECTE CETTE DURÉE
+- Nombre d'exercices PAR SÉANCE selon la durée :
+  * 45 minutes = 4 exercices
+  * 1 heure = 5 à 6 exercices
+  * 1h15 = 6 à 7 exercices
+  * 1h30 = 7 à 8 exercices
+- Chaque exercice = 3 à 4 séries + temps de repos inclus
+- Adapte au niveau : \${profile.level}
+- Équipement : \${profile.equipment}
+- Génère EXACTEMENT \${profile.days} jours dans workoutPlan
+ 
 INSTRUCTIONS :
-1. Analyse le profil et donne un résumé motivant (3-4 lignes)
-2. Génère le programme dans un bloc JSON unique comme suit :
+1. Résumé motivant du profil (3-4 lignes)
+2. Génère TOUT dans UN SEUL bloc JSON avec le bon nombre d'exercices :
  
 \`\`\`json
 {
@@ -99,7 +111,11 @@ INSTRUCTIONS :
       "day": "Jour 1",
       "focus": "Pectoraux / Triceps",
       "exercises": [
-        { "name": "Développé couché", "sets": 4, "reps": "8-10", "rest": 90, "tip": "Garde les omoplates serrées" }
+        { "name": "Développé couché", "sets": 4, "reps": "8-10", "rest": 90, "tip": "Omoplates serrées" },
+        { "name": "Écarté incliné haltères", "sets": 3, "reps": "10-12", "rest": 75, "tip": "Amplitude complète" },
+        { "name": "Dips lestés", "sets": 3, "reps": "8-10", "rest": 90, "tip": "Penche le buste" },
+        { "name": "Extension triceps poulie", "sets": 3, "reps": "12-15", "rest": 60, "tip": "Coudes fixes" },
+        { "name": "Développé incliné haltères", "sets": 3, "reps": "10-12", "rest": 75, "tip": "Contrôle la descente" }
       ]
     }
   ],
@@ -121,7 +137,7 @@ INSTRUCTIONS :
 }
 \`\`\`
  
-3. Termine par un message de motivation court et percutant.
+3. Message de motivation court et percutant.
 `;
  
     try {
