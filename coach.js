@@ -3,7 +3,7 @@
 // Appelle le proxy Netlify qui sécurise la clé Groq
 // ─────────────────────────────────────────────────────────────
 
-const PROXY_URL = '/netlify/functions/coach';
+const PROXY_URL = '/.netlify/functions/coach';
 
 // ── PROFIL UTILISATEUR (localStorage) ────────────────────────
 export const CoachProfile = {
