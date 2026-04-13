@@ -2,14 +2,14 @@
 // coach.js — Client IA · MYFIT AI ELITE
 // Appelle le proxy Netlify qui sécurise la clé Groq
 // ─────────────────────────────────────────────────────────────
-
-const PROXY_URL = '/.netlify/functions/coach';
-
+ 
+const PROXY_URL = '/netlify/functions/coach';
+ 
 // ── PROFIL UTILISATEUR (localStorage) ────────────────────────
 export const CoachProfile = {
     _key: 'myfit_coach_profile_v1',
     data: null,
-
+ 
     init() {
         try {
             const raw = localStorage.getItem(this._key);
@@ -18,7 +18,7 @@ export const CoachProfile = {
             this.data = null;
         }
     },
-
+ 
     save(profile) {
         this.data = profile;
         try {
@@ -27,7 +27,7 @@ export const CoachProfile = {
             console.error('CoachProfile.save() :', e);
         }
     },
-
+ 
     clear() {
         this.data = null;
         try {
@@ -35,9 +35,9 @@ export const CoachProfile = {
         } catch {}
     },
 };
-
+ 
 CoachProfile.init();
-
+ 
 // ── APPEL PROXY ───────────────────────────────────────────────
 async function callProxy(prompt, userData) {
     const res = await fetch(PROXY_URL, {
@@ -45,17 +45,17 @@ async function callProxy(prompt, userData) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt, userData }),
     });
-
+ 
     if (res.status === 429) throw new Error('Quota API atteint. Réessaie dans quelques secondes.');
     if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err?.error || `Erreur serveur (${res.status})`);
     }
-
+ 
     const data = await res.json();
     return data.content || '';
 }
-
+ 
 // ── EXTRACTION JSON PROGRAMME ─────────────────────────────────
 function extractProgram(text) {
     try {
@@ -71,12 +71,12 @@ function extractProgram(text) {
         return null;
     }
 }
-
+ 
 // ── GÉNÉRATION PROGRAMME COMPLET ──────────────────────────────
 export async function generateFullProgram(profile, onProgress, onDone, onError) {
     const prompt = `
 Tu es un coach expert en musculation et nutrition. Génère un programme COMPLET et PERSONNALISÉ pour cet athlète.
-
+ 
 PROFIL :
 - Âge : ${profile.age} ans
 - Poids : ${profile.weight} kg
@@ -86,11 +86,11 @@ PROFIL :
 - Équipement : ${profile.equipment}
 - Jours d'entraînement : ${profile.days} jours/semaine
 - Restrictions alimentaires : ${profile.diet || 'Aucune'}
-
+ 
 INSTRUCTIONS :
 1. Analyse le profil et donne un résumé motivant (3-4 lignes)
 2. Génère le programme dans un bloc JSON unique comme suit :
-
+ 
 \`\`\`json
 {
   "workoutPlan": [
@@ -119,14 +119,14 @@ INSTRUCTIONS :
   "dailyFat": 80
 }
 \`\`\`
-
+ 
 3. Termine par un message de motivation court et percutant.
 `;
-
+ 
     try {
         onProgress?.('Analyse en cours...');
         const content = await callProxy(prompt, profile);
-
+ 
         // Sauvegarde programme dans State
         try {
             const stateModule = await import('./state.js');
@@ -151,34 +151,55 @@ INSTRUCTIONS :
         } catch (e) {
             console.warn('Extraction programme :', e);
         }
-
-        onDone?.(content);
+ 
+        // Construit l'objet programme attendu par ui-coach.js
+        try {
+            const match = content.match(/```json([\s\S]*?)```/);
+            if (match) {
+                const parsed = JSON.parse(match[1].trim());
+                const program = {
+                    workoutPlan: parsed.workoutPlan || [],
+                    mealPlan:    parsed.mealPlan    || [],
+                    targetKcal:  parsed.dailyKcal   || 2500,
+                    macros: {
+                        protein: parsed.dailyProtein || 0,
+                        carbs:   parsed.dailyCarbs   || 0,
+                        fat:     parsed.dailyFat     || 0,
+                    },
+                };
+                onDone?.(program);
+                return;
+            }
+        } catch (e) {
+            console.warn('Parse programme:', e);
+        }
+        onDone?.({ workoutPlan: [], mealPlan: [], targetKcal: 2500, macros: { protein: 0, carbs: 0, fat: 0 } });
     } catch (err) {
         onError?.(err.message);
     }
 }
-
+ 
 // ── CHAT AVEC LE COACH ────────────────────────────────────────
 export async function chatWithCoach(profile, history, userMessage, onPartial, onDone, onError) {
     const historyText = history
         .slice(-10)
         .map(m => `${m.role === 'user' ? 'Utilisateur' : 'Coach'}: ${m.content}`)
         .join('\n');
-
+ 
     const prompt = `
 Tu es un coach de musculation et nutrition expert, motivant et précis.
-
+ 
 PROFIL ATHLÈTE :
 - Âge : ${profile.age} ans | Poids : ${profile.weight} kg | Taille : ${profile.height} cm
 - Niveau : ${profile.level} | Objectif : ${profile.goal}
 - Équipement : ${profile.equipment}
 ${profile.diet ? `- Régime : ${profile.diet}` : ''}
-
+ 
 HISTORIQUE RÉCENT :
 ${historyText || 'Début de conversation.'}
-
+ 
 QUESTION : ${userMessage}
-
+ 
 Si l'utilisateur demande une modification de son programme ou de son plan alimentaire, génère les changements dans un bloc JSON :
 \`\`\`json
 {
@@ -187,12 +208,12 @@ Si l'utilisateur demande une modification de son programme ou de son plan alimen
 \`\`\`
 Sinon, réponds directement sans JSON.
 `;
-
+ 
     try {
         // Simulation streaming côté client (le proxy renvoie la réponse complète)
         onPartial?.('...');
         const content = await callProxy(prompt, profile);
-
+ 
         // Vérifie si un programme est inclus dans la réponse
         let extractedProgram = null;
         try {
@@ -210,28 +231,28 @@ Sinon, réponds directement sans JSON.
                 }
             }
         } catch {}
-
+ 
         onDone?.(content, extractedProgram);
     } catch (err) {
         onError?.(err.message);
     }
 }
-
+ 
 // ── REMPLACEMENT D'UN REPAS ───────────────────────────────────
 export async function replaceMeal(mealIndex, currentMeal, profile, onDone, onError) {
     const prompt = `
 Tu es un nutritionniste expert. Remplace ce repas par une alternative équivalente.
-
+ 
 PROFIL : ${profile.age} ans, ${profile.weight} kg, objectif : ${profile.goal}
 ${profile.diet ? `Restrictions : ${profile.diet}` : ''}
-
+ 
 REPAS ACTUEL :
 - Nom : ${currentMeal.meal}
 - Heure : ${currentMeal.time}
 - Calories : ${currentMeal.kcal} kcal
 - Protéines : ${currentMeal.protein}g | Glucides : ${currentMeal.carbs}g | Lipides : ${currentMeal.fat}g
 - Aliments : ${currentMeal.foods?.join(', ')}
-
+ 
 Génère UN SEUL repas de remplacement avec des valeurs nutritionnelles similaires (±10%).
 Réponds UNIQUEMENT avec ce JSON, sans texte avant ou après :
 {
@@ -244,10 +265,10 @@ Réponds UNIQUEMENT avec ce JSON, sans texte avant ou après :
   "foods": ["Aliment 1", "Aliment 2", "Aliment 3"]
 }
 `;
-
+ 
     try {
         const content = await callProxy(prompt, profile);
-
+ 
         // Extrait le JSON de la réponse
         let newMeal = null;
         try {
@@ -258,9 +279,9 @@ Réponds UNIQUEMENT avec ce JSON, sans texte avant ou après :
             const match = content.match(/\{[\s\S]*\}/);
             if (match) newMeal = JSON.parse(match[0]);
         }
-
+ 
         if (!newMeal?.meal) throw new Error('Format de réponse invalide');
-
+ 
         // Met à jour le State
         try {
             const stateModule = await import('./state.js');
@@ -270,7 +291,7 @@ Réponds UNIQUEMENT avec ce JSON, sans texte avant ou après :
                 State.save();
             }
         } catch {}
-
+ 
         onDone?.(newMeal);
     } catch (err) {
         onError?.(err.message);
