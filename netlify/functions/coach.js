@@ -1,77 +1,83 @@
-// ─────────────────────────────────────────────────────────────
-// PROXY SÉCURISÉ — à déployer sur Netlify ou Vercel
-//
-// Netlify : placer dans /netlify/functions/coach.js
-// Vercel  : placer dans /api/coach.js
-//
+// netlify/functions/coach.js — Proxy sécurisé NETLIFY
 // La clé API reste sur le serveur, jamais exposée au client.
-// ─────────────────────────────────────────────────────────────
- 
+
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
- 
-export default async function handler(req, res) {
-    // CORS — autorise seulement ton domaine en production
-    res.setHeader('Access-Control-Allow-Origin', process.env.ALLOWED_ORIGIN || '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
- 
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
+
+export const handler = async (event) => {
+    const headers = {
+        'Access-Control-Allow-Origin': process.env.ALLOWED_ORIGIN || '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Content-Type': 'application/json',
+    };
+
+    // Preflight CORS
+    if (event.httpMethod === 'OPTIONS') {
+        return { statusCode: 200, headers, body: '' };
     }
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Méthode non autorisée' });
+
+    if (event.httpMethod !== 'POST') {
+        return { statusCode: 405, headers, body: JSON.stringify({ error: 'Méthode non autorisée' }) };
     }
- 
-    const { prompt, userData } = req.body;
+
+    let prompt, userData;
+    try {
+        const body = JSON.parse(event.body || '{}');
+        prompt   = body.prompt;
+        userData = body.userData;
+    } catch {
+        return { statusCode: 400, headers, body: JSON.stringify({ error: 'Body invalide' }) };
+    }
+
     if (!prompt) {
-        return res.status(400).json({ error: 'Paramètre prompt manquant' });
+        return { statusCode: 400, headers, body: JSON.stringify({ error: 'Paramètre prompt manquant' }) };
     }
- 
-    const apiKey = process.env.GROQ_API_KEY; // ← définie dans les variables d'environnement
+
+    const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) {
-        return res.status(500).json({ error: 'Clé API non configurée sur le serveur' });
+        return { statusCode: 500, headers, body: JSON.stringify({ error: 'Clé API non configurée' }) };
     }
- 
+
     try {
         const response = await fetch(GROQ_URL, {
             method: 'POST',
             headers: {
-                'Content-Type':  'application/json',
+                'Content-Type': 'application/json',
                 'Authorization': 'Bearer ' + apiKey,
             },
             body: JSON.stringify({
-                model:       'llama-3.3-70b-versatile',
-                max_tokens:  2000,
+                model: 'llama-3.3-70b-versatile',
+                max_tokens: 2000,
                 temperature: 0.7,
                 messages: [
                     {
-                        role:    'system',
+                        role: 'system',
                         content: `Tu es un coach de musculation expert "Cyber-Elite".
 Données utilisateur : ${JSON.stringify(userData || {})}
 Règles : Réponse structurée et motivante. Utilise des emojis avec parcimonie.`,
                     },
                     {
-                        role:    'user',
+                        role: 'user',
                         content: prompt,
                     },
                 ],
             }),
         });
- 
+
         if (response.status === 429) {
-            return res.status(429).json({ error: 'Quota atteint' });
+            return { statusCode: 429, headers, body: JSON.stringify({ error: 'Quota atteint' }) };
         }
         if (!response.ok) {
             const err = await response.json().catch(() => ({}));
-            return res.status(response.status).json({ error: err?.error?.message || 'Erreur API' });
+            return { statusCode: response.status, headers, body: JSON.stringify({ error: err?.error?.message || 'Erreur API' }) };
         }
- 
+
         const data    = await response.json();
         const content = data?.choices?.[0]?.message?.content || '';
-        return res.status(200).json({ content });
- 
+        return { statusCode: 200, headers, body: JSON.stringify({ content }) };
+
     } catch (err) {
         console.error('Erreur proxy coach :', err);
-        return res.status(500).json({ error: 'Erreur réseau serveur' });
+        return { statusCode: 500, headers, body: JSON.stringify({ error: 'Erreur réseau serveur' }) };
     }
-}
+};
