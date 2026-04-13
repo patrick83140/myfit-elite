@@ -84,6 +84,16 @@ export const UICoach = {
             </div>
  
             <div class="form-field" style="margin-top:12px">
+                <label class="form-label">DURÉE DE SÉANCE</label>
+                <div class="radio-group" id="rg-duration">
+                    <div class="radio-btn" data-val="45 minutes">45 min</div>
+                    <div class="radio-btn active" data-val="1 heure">1h00</div>
+                    <div class="radio-btn" data-val="1h15">1h15</div>
+                    <div class="radio-btn" data-val="1h30">1h30</div>
+                </div>
+            </div>
+
+            <div class="form-field" style="margin-top:12px">
                 <label class="form-label">RESTRICTIONS ALIMENTAIRES <span style="color:var(--sub);font-size:.7rem">(optionnel)</span></label>
                 <input type="text" id="cf-diet" placeholder="Ex : sans lactose, végétarien, halal..." class="form-input" style="text-align:left;padding-left:14px">
             </div>
@@ -120,12 +130,13 @@ export const UICoach = {
             return;
         }
  
-        const level = document.querySelector('#rg-level .radio-btn.active')?.dataset.val || 'Intermédiaire';
-        const goal  = document.querySelector('#rg-goal .radio-btn.active')?.dataset.val  || 'Prise de masse musculaire';
-        const equip = document.querySelector('#rg-equip .radio-btn.active')?.dataset.val || 'Salle de sport complète';
-        const diet  = document.getElementById('cf-diet')?.value || '';
+        const level    = document.querySelector('#rg-level .radio-btn.active')?.dataset.val    || 'Intermédiaire';
+        const goal     = document.querySelector('#rg-goal .radio-btn.active')?.dataset.val     || 'Prise de masse musculaire';
+        const equip    = document.querySelector('#rg-equip .radio-btn.active')?.dataset.val    || 'Salle de sport complète';
+        const duration = document.querySelector('#rg-duration .radio-btn.active')?.dataset.val || '1 heure';
+        const diet     = document.getElementById('cf-diet')?.value || '';
  
-        const profile = { age, weight, height, days, level, goal, equipment: equip, diet };
+        const profile = { age, weight, height, days, level, goal, equipment: equip, duration, diet };
         CoachProfile.save(profile);
         this._renderGenerating(container, profile);
     },

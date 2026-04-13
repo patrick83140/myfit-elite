@@ -85,6 +85,7 @@ PROFIL :
 - Objectif : ${profile.goal}
 - Équipement : ${profile.equipment}
 - Jours d'entraînement : ${profile.days} jours/semaine
+- Durée de séance : ${profile.duration || '1 heure'}
 - Restrictions alimentaires : ${profile.diet || 'Aucune'}
  
 INSTRUCTIONS :
