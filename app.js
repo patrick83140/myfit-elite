@@ -204,8 +204,8 @@ window.addEventListener('myfit:program-updated', (e) => {
         _setMsg(`✅ Programme IA appliqué : ${parts.join(' + ')} synchronisé${parts.length > 1 ? 's' : ''}.`);
     }
     // Rafraîchit l'onglet courant si concerné
-    if (currentView === 'workout' && program?.workoutPlan)  UI.renderWorkout(viewPort);
-    if (currentView === 'nutrition' && program?.mealPlan)   UI.renderNutrition(viewPort);
+    if (program?.workoutPlan) UI.renderWorkout(viewPort);
+    if (currentView === 'nutrition' && program?.mealPlan) UI.renderNutrition(viewPort);
 });
  
 // ── CONTRÔLES GLOBAUX ─────────────────────────────────────────
@@ -358,4 +358,4 @@ setTimeout(() => {
             : `Bienvenue. ${stats.sessions} sessions enregistrées. On continue.`;
     }
     _setMsg(msg);
-}, 900);
+}, 900)

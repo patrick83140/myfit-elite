@@ -232,12 +232,15 @@ ${profile.diet ? `- Régime : ${profile.diet}` : ''}
 HISTORIQUE RÉCENT :
 ${historyText || 'Début de conversation.'}
  
+PROGRAMME ACTUEL :
+${profile.program ? JSON.stringify(profile.program.workoutPlan || [], null, 2) : 'Pas encore généré'}
+ 
 QUESTION : ${userMessage}
  
-Si l'utilisateur demande une modification de son programme ou de son plan alimentaire, génère les changements dans un bloc JSON :
+Si l'utilisateur demande une modification du programme, génère le programme COMPLET modifié dans un bloc JSON :
 \`\`\`json
 {
-  "workoutPlan": [...] ou "mealPlan": [...]
+  "workoutPlan": [...tous les jours avec les modifications...]
 }
 \`\`\`
 Sinon, réponds directement sans JSON.
@@ -257,14 +260,32 @@ Sinon, réponds directement sans JSON.
                 if (parsed.workoutPlan || parsed.mealPlan) {
                     const stateModule = await import('./state.js');
                     const { State } = stateModule;
-                    if (parsed.workoutPlan) State.data.aiWorkoutPlan = parsed.workoutPlan;
-                    if (parsed.mealPlan)    State.data.aiMealPlan    = parsed.mealPlan;
+                    // Fusionne avec le plan existant si modification partielle
+                    if (parsed.workoutPlan) {
+                        // Si le coach renvoie un seul jour modifié, on fusionne
+                        if (parsed.workoutPlan.length === 1 && State.data.aiWorkoutPlan?.length > 1) {
+                            const dayName = parsed.workoutPlan[0].day;
+                            const idx = State.data.aiWorkoutPlan.findIndex(d => d.day === dayName);
+                            if (idx >= 0) {
+                                State.data.aiWorkoutPlan[idx] = parsed.workoutPlan[0];
+                            } else {
+                                State.data.aiWorkoutPlan = parsed.workoutPlan;
+                            }
+                        } else {
+                            State.data.aiWorkoutPlan = parsed.workoutPlan;
+                        }
+                    }
+                    if (parsed.mealPlan) State.data.aiMealPlan = parsed.mealPlan;
                     State.save();
-                    window.dispatchEvent(new CustomEvent('myfit:program-updated', { detail: parsed }));
+                    // Envoie le plan complet mis à jour
+                    window.dispatchEvent(new CustomEvent('myfit:program-updated', { detail: {
+                        workoutPlan: State.data.aiWorkoutPlan,
+                        mealPlan: parsed.mealPlan,
+                    }}));
                     extractedProgram = parsed;
                 }
             }
-        } catch {}
+        } catch (e) { console.warn('Chat extract:', e); }
  
         onDone?.(content, extractedProgram);
     } catch (err) {
