@@ -321,6 +321,11 @@ window.AppControls = {
         );
     },
  
+    selectDay(index) {
+        localStorage.setItem('myfit_selected_day', index);
+        UI.renderWorkout(viewPort);
+    },
+ 
     exportData() {
         State.exportData();
         _setMsg('💾 Sauvegarde exportée avec succès.');
@@ -354,4 +359,3 @@ setTimeout(() => {
     }
     _setMsg(msg);
 }, 900);
- 

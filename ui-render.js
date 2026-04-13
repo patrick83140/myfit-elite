@@ -15,8 +15,11 @@ export const UI = {
         const aiDayIndex = aiPlan ? sessionCount % aiPlan.length : 0;
         const aiDay = aiPlan?.[aiDayIndex];
  
-        // Exercices à afficher : IA si dispo, sinon exercices par défaut
-        const exercisesToShow = aiDay ? aiDay.exercises : null;
+        // Jour sélectionné manuellement ou par défaut session cyclique
+        const savedDayIndex = parseInt(localStorage.getItem('myfit_selected_day') ?? aiDayIndex);
+        const selectedDayIndex = aiPlan ? Math.min(savedDayIndex, aiPlan.length - 1) : 0;
+        const selectedDay = aiPlan?.[selectedDayIndex];
+        const exercisesToShow = selectedDay ? selectedDay.exercises : null;
 
         container.innerHTML = `
             <h2 class="section-header">ENTRAÎNEMENT DU JOUR</h2>
@@ -28,15 +31,22 @@ export const UI = {
             </div>` : ''}
 
             ${aiPlan ? `
-            <div style="padding:4px 18px 8px;display:flex;align-items:center;gap:8px">
-                <div style="width:6px;height:6px;border-radius:50%;background:var(--g);box-shadow:0 0 8px var(--g)"></div>
-                <span style="font-size:.72rem;font-weight:700;color:var(--g);letter-spacing:.06em">PROGRAMME IA · JOUR ${aiDayIndex + 1}</span>
-                <span style="font-size:.68rem;color:var(--sub);margin-left:4px">${aiDay?.focus || ''}</span>
+            <div style="padding:8px 16px 4px;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none">
+                ${aiPlan.map((d, i) => `
+                <button onclick="window.AppControls.selectDay(${i})" style="
+                    flex-shrink:0;padding:7px 14px;border-radius:50px;font-size:.68rem;font-weight:700;
+                    letter-spacing:.06em;cursor:pointer;border:1px solid;
+                    ${i === selectedDayIndex
+                        ? 'background:var(--g);color:#000;border-color:var(--g)'
+                        : 'background:transparent;color:var(--sub);border-color:var(--brd)'
+                    };transition:all .2s;
+                ">JOUR ${i + 1}<br><span style="font-size:.58rem;font-weight:400">${d.focus}</span></button>
+                `).join('')}
             </div>` : ''}
 
             <h2 class="section-header" style="margin-top:4px">MES CHARGES</h2>
             ${exercisesToShow
-                ? exercisesToShow.map((ex, i) => this._aiExerciseCard(ex, i, today, aiDayIndex)).join('')
+                ? exercisesToShow.map((ex, i) => this._aiExerciseCard(ex, i, today, selectedDayIndex)).join('')
                 : EXERCISES.map((ex, i) => this._exerciseCard(ex, i, today)).join('')
             }
         `;
