@@ -15,6 +15,9 @@ export const UI = {
         const aiDayIndex = aiPlan ? sessionCount % aiPlan.length : 0;
         const aiDay = aiPlan?.[aiDayIndex];
  
+        // Exercices à afficher : IA si dispo, sinon exercices par défaut
+        const exercisesToShow = aiDay ? aiDay.exercises : null;
+
         container.innerHTML = `
             <h2 class="section-header">ENTRAÎNEMENT DU JOUR</h2>
             ${stats.sessions > 0 ? `
@@ -23,13 +26,19 @@ export const UI = {
                 <span>⚡ <strong style="color:var(--text)">${stats.totalSets}</strong> séries</span>
                 <span>🏋️ <strong style="color:var(--text)">${(stats.totalVol / 1000).toFixed(1)}t</strong> volume</span>
             </div>` : ''}
- 
-            ${aiPlan ? this._renderAiWorkoutSection(aiPlan, aiDay, aiDayIndex) : ''}
- 
-            <h2 class="section-header" style="margin-top:${aiPlan ? '8px' : '0'}">
-                ${aiPlan ? 'MES CHARGES' : 'SÉANCES'}
-            </h2>
-            ${EXERCISES.map((ex, i) => this._exerciseCard(ex, i, today)).join('')}
+
+            ${aiPlan ? `
+            <div style="padding:4px 18px 8px;display:flex;align-items:center;gap:8px">
+                <div style="width:6px;height:6px;border-radius:50%;background:var(--g);box-shadow:0 0 8px var(--g)"></div>
+                <span style="font-size:.72rem;font-weight:700;color:var(--g);letter-spacing:.06em">PROGRAMME IA · JOUR ${aiDayIndex + 1}</span>
+                <span style="font-size:.68rem;color:var(--sub);margin-left:4px">${aiDay?.focus || ''}</span>
+            </div>` : ''}
+
+            <h2 class="section-header" style="margin-top:4px">MES CHARGES</h2>
+            ${exercisesToShow
+                ? exercisesToShow.map((ex, i) => this._aiExerciseCard(ex, i, today, aiDayIndex)).join('')
+                : EXERCISES.map((ex, i) => this._exerciseCard(ex, i, today)).join('')
+            }
         `;
         this._addRipples(container);
     },
@@ -95,6 +104,41 @@ export const UI = {
                 </div>
             </div>
             <button class="primary" onclick="window.AppControls.validateSet('${ex.id}', ${ex.rest}, ${ex.target}, '${ex.type}')">
+                ✓ VALIDER LA SÉRIE
+            </button>
+        </div>`;
+    },
+ 
+    _aiExerciseCard(ex, i, todaySets, dayIndex) {
+        const exId = 'ai_' + dayIndex + '_' + i;
+        const w    = parseFloat(localStorage.getItem('aiw_' + exId) || 0);
+        const done = todaySets.filter(s => s.id === exId).length;
+        const repsRange = ex.reps || '10';
+        const targetReps = parseInt(repsRange.toString().split('-')[0]) || 10;
+        const rest = ex.rest || 90;
+        return `
+        <div class="card ex-card" style="animation-delay:${i * 0.07}s">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+                <div>
+                    <div class="ex-meta">PROGRAMME IA · ${ex.sets} séries × ${ex.reps} reps</div>
+                    <div class="ex-name">${ex.name}</div>
+                    <div class="ex-target">Objectif : <strong>${targetReps}</strong> reps · Repos : ${rest}s</div>
+                    ${ex.tip ? `<div style="margin-top:5px;font-size:.7rem;color:var(--sub);font-style:italic">💡 ${ex.tip}</div>` : ''}
+                </div>
+                ${done > 0 ? `<div style="background:var(--g-dim);border:1px solid var(--brd2);border-radius:50px;padding:4px 10px;font-size:.62rem;color:var(--g);font-weight:700;white-space:nowrap">${done} série${done > 1 ? 's' : ''} ✓</div>` : ''}
+            </div>
+            <div class="input-row">
+                <div class="input-wrap">
+                    <label>KG</label>
+                    <input type="number" id="w_${exId}" value="${w}" step="1.25" min="0" max="1000"
+                        onchange="localStorage.setItem('aiw_${exId}', this.value)">
+                </div>
+                <div class="input-wrap">
+                    <label>REPS</label>
+                    <input type="number" id="r_${exId}" min="1" max="100" placeholder="—">
+                </div>
+            </div>
+            <button class="primary" onclick="window.AppControls.validateSet('${exId}', ${rest}, ${targetReps}, 'Volume')">
                 ✓ VALIDER LA SÉRIE
             </button>
         </div>`;
