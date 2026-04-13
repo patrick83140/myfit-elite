@@ -9,14 +9,11 @@ export const UI = {
         const stats   = State.getStats();
         const today   = State.getTodaySets();
  
-        // Si un programme IA existe, l'afficher en premier
+        // Programme IA : on cycle par numéro de session
         const aiPlan  = State.data.aiWorkoutPlan;
-        const todayDay = new Date().toLocaleDateString('fr-FR', { weekday: 'long' });
-        const todayDayCap = todayDay.charAt(0).toUpperCase() + todayDay.slice(1);
-        const aiDay   = aiPlan?.find(d =>
-            d.day.toLowerCase().includes(todayDay.toLowerCase()) ||
-            todayDay.toLowerCase().includes(d.day.toLowerCase().split(' ')[0])
-        );
+        const sessionCount = State.getStats().sessions;
+        const aiDayIndex = aiPlan ? sessionCount % aiPlan.length : 0;
+        const aiDay = aiPlan?.[aiDayIndex];
  
         container.innerHTML = `
             <h2 class="section-header">ENTRAÎNEMENT DU JOUR</h2>
@@ -27,7 +24,7 @@ export const UI = {
                 <span>🏋️ <strong style="color:var(--text)">${(stats.totalVol / 1000).toFixed(1)}t</strong> volume</span>
             </div>` : ''}
  
-            ${aiPlan ? this._renderAiWorkoutSection(aiPlan, aiDay, todayDayCap) : ''}
+            ${aiPlan ? this._renderAiWorkoutSection(aiPlan, aiDay, aiDayIndex) : ''}
  
             <h2 class="section-header" style="margin-top:${aiPlan ? '8px' : '0'}">
                 ${aiPlan ? 'MES CHARGES' : 'SÉANCES'}
@@ -37,14 +34,14 @@ export const UI = {
         this._addRipples(container);
     },
  
-    _renderAiWorkoutSection(aiPlan, aiDay, todayDayCap) {
+    _renderAiWorkoutSection(aiPlan, aiDay, aiDayIndex) {
         if (aiDay) {
-            // Affiche le jour d'entraînement IA correspondant à aujourd'hui
+            // Affiche le jour de session courant
             return `
             <div class="card" style="border-color:rgba(0,255,136,.3);background:rgba(0,255,136,.03)">
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
                     <div style="width:6px;height:6px;border-radius:50%;background:var(--g);box-shadow:0 0 8px var(--g)"></div>
-                    <div class="card-title" style="margin-bottom:0">PROGRAMME IA · ${aiDay.day.toUpperCase()}</div>
+                    <div class="card-title" style="margin-bottom:0">PROGRAMME IA · JOUR ${aiDayIndex + 1}</div>
                     <div style="font-size:.68rem;color:var(--sub);margin-left:auto">${aiDay.focus}</div>
                 </div>
                 ${aiDay.exercises.map(ex => `
@@ -62,9 +59,9 @@ export const UI = {
             return `
             <div class="card" style="border-color:rgba(0,255,136,.2)">
                 <div class="card-title">PROGRAMME IA · SEMAINE</div>
-                ${aiPlan.map(d => `
+                ${aiPlan.map((d, i) => `
                 <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--brd)">
-                    <span style="font-size:.8rem;font-weight:700;color:var(--g);min-width:80px">${d.day}</span>
+                    <span style="font-size:.8rem;font-weight:700;color:var(--g);min-width:60px">JOUR ${i + 1}</span>
                     <span style="font-size:.75rem;color:var(--sub)">${d.focus}</span>
                     <span style="font-size:.62rem;color:var(--sub2)">${d.exercises.length} ex.</span>
                 </div>`).join('')}
