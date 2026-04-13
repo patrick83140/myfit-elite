@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#000">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>MYFIT AI ELITE</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <canvas id="bg-canvas"></canvas>
+    <div id="scanlines"></div>
+    <div id="grid-overlay"></div>
+
+    <header id="ai-status-bar">
+        <div class="ai-indicator">
+            <div class="ai-rings">
+                <div class="ring r1"></div>
+                <div class="ring r2"></div>
+                <div class="dot"></div>
+            </div>
+            <span class="ai-label">AI</span>
+        </div>
+        <div id="ai-message">Initialisation des protocoles de force...</div>
+        <div id="streak-badge" class="hidden"></div>
+    </header>
+
+    <div id="timer-overlay" class="hidden">
+        <div class="timer-bg-pulse"></div>
+        <div id="timer-label">RÉCUPÉRATION</div>
+        <div id="timer-circle">
+            <svg viewBox="0 0 180 180" width="180" height="180">
+                <defs>
+                    <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#00ff88"/>
+                        <stop offset="100%" stop-color="#00ccff"/>
+                    </linearGradient>
+                    <filter id="glow-filter">
+                        <feGaussianBlur stdDeviation="4" result="blur"/>
+                        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                </defs>
+                <circle class="track" cx="90" cy="90" r="78"/>
+                <circle class="progress" id="timer-progress" cx="90" cy="90" r="78" filter="url(#glow-filter)"/>
+            </svg>
+            <div id="timer-content">
+                <div id="timer-number">00</div>
+                <div id="timer-unit">SEC</div>
+            </div>
+        </div>
+        <p class="timer-hint">Prépare ta prochaine série</p>
+        <button id="skip-btn" onclick="window.AppControls.skipRest()">⚡ PASSER</button>
+    </div>
+
+    <div id="pr-toast" class="hidden">
+        <span class="pr-icon">🏆</span>
+        <div>
+            <div class="pr-title">PERSONAL RECORD</div>
+            <div id="pr-detail" class="pr-sub"></div>
+        </div>
+    </div>
+
+    <main id="view-port"></main>
+
+    <nav id="bottom-nav">
+        <div class="nav-item active" data-view="workout" role="button" tabindex="0">
+            <svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 5v14M18 5v14M6 12h12M3 8l3-3M21 8l-3-3M3 16l3 3M21 16l-3 3"/>
+            </svg>
+            <span>TRAIN</span>
+        </div>
+        <div class="nav-item" data-view="nutrition" role="button" tabindex="0">
+            <svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2a9 9 0 100 18A9 9 0 0012 2z"/><path d="M12 6v6l3 3"/>
+            </svg>
+            <span>EAT</span>
+        </div>
+        <div class="nav-item nav-coach" data-view="coach" role="button" tabindex="0">
+            <svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            <span>COACH</span>
+        </div>
+        <div class="nav-item" data-view="vision" role="button" tabindex="0">
+            <svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+            </svg>
+            <span>VISION</span>
+        </div>
+        <div class="nav-item" data-view="stats" role="button" tabindex="0">
+            <svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+            <span>DATA</span>
+        </div>
+    </nav>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
