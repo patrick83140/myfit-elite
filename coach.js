@@ -109,7 +109,7 @@ ${profile.diet ? `• Restrictions alimentaires : ${profile.diet}` : ''}
 1. Analyse le profil en 3-4 lignes motivantes
 2. Génère TOUT dans UN SEUL bloc JSON :
  
-\\`\\`\\`json
+\`\`\`json
 {
   "workoutPlan": [
     {
@@ -140,10 +140,10 @@ ${profile.diet ? `• Restrictions alimentaires : ${profile.diet}` : ''}
   "dailyCarbs": 320,
   "dailyFat": 80
 }
-\\`\\`\\`
+\`\`\`
  
 3. Termine par un message de motivation percutant (1-2 phrases max).
-`;;
+`;
  
     try {
         onProgress?.('Analyse en cours...');
@@ -271,7 +271,7 @@ Tu peux modifier :
 Si tu fais des modifications, réponds ainsi :
 [Explication claire de ce que tu as changé et pourquoi]
  
-\\`\\`\\`json
+\`\`\`json
 {
   "workoutPlan": [...programme complet si modifié...],
   "mealPlan": [...plan complet si modifié...],
@@ -280,10 +280,10 @@ Si tu fais des modifications, réponds ainsi :
   "dailyCarbs": 0,
   "dailyFat": 0
 }
-\\`\\`\\`
+\`\`\`
  
 Si tu ne fais PAS de modification, réponds directement sans JSON.
-`;;
+`;
  
     try {
         // Simulation streaming côté client (le proxy renvoie la réponse complète)
