@@ -22,25 +22,25 @@ document.addEventListener('visibilitychange', () => {
 (function initBgCanvas() {
     const canvas = document.getElementById('bg-canvas');
     if (!canvas) return;
-    const ctx     = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d');
     const isMobile = window.innerWidth < 768;
-    const N       = isMobile ? 14 : 28;
+    const N = isMobile ? 14 : 28;
     const particles = [];
  
     function resize() {
-        canvas.width  = window.innerWidth;
+        canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
     }
  
     for (let i = 0; i < N; i++) {
         particles.push({
-            x:     Math.random() * window.innerWidth,
-            y:     Math.random() * window.innerHeight,
-            r:     Math.random() * 1.5 + 0.5,
-            vx:    (Math.random() - 0.5) * 0.3,
-            vy:    (Math.random() - 0.5) * 0.3,
+            x: Math.random() * window.innerWidth,
+            y: Math.random() * window.innerHeight,
+            r: Math.random() * 1.5 + 0.5,
+            vx: (Math.random() - 0.5) * 0.3,
+            vy: (Math.random() - 0.5) * 0.3,
             alpha: Math.random() * 0.6 + 0.1,
-            hue:   Math.random() > 0.7 ? 180 : 150,
+            hue: Math.random() > 0.7 ? 180 : 150,
         });
     }
  
@@ -53,9 +53,9 @@ document.addEventListener('visibilitychange', () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         for (const p of particles) {
             p.x += p.vx; p.y += p.vy;
-            if (p.x < 0)             p.x = canvas.width;
-            if (p.x > canvas.width)  p.x = 0;
-            if (p.y < 0)             p.y = canvas.height;
+            if (p.x < 0) p.x = canvas.width;
+            if (p.x > canvas.width) p.x = 0;
+            if (p.y < 0) p.y = canvas.height;
             if (p.y > canvas.height) p.y = 0;
             ctx.beginPath();
             ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
@@ -86,9 +86,11 @@ const Timer = {
             clock.innerText = left < 10 ? '0' + left : String(left);
             if (progress) progress.style.strokeDashoffset = String(this._circ * (1 - left / this._total));
             if (left <= 0) {
-                this.stop(); overlay.classList.add('hidden');
+                this.stop();
+                overlay.classList.add('hidden');
                 _setMsg('⚡ Récupération terminée. Prêt pour la prochaine série.');
-                _vibrate(50); return;
+                _vibrate(50);
+                return;
             }
             left--;
         };
@@ -117,7 +119,7 @@ function showPRToast(exerciseName, weight) {
     }, 3200);
 }
  
-// ── TOAST GÉNÉRIQUE (sync programme) ─────────────────────────
+// ── TOAST SYNC ────────────────────────────────────────────────
 function showSyncToast(msg) {
     let toast = document.getElementById('sync-toast');
     if (!toast) {
@@ -193,7 +195,6 @@ document.querySelectorAll('.nav-item').forEach(item => {
 });
  
 // ── SYNC AUTO PROGRAMME ───────────────────────────────────────
-// Écoute les mises à jour du Coach IA et rafraîchit l'onglet actif si pertinent
 window.addEventListener('myfit:program-updated', (e) => {
     const program = e.detail;
     const parts = [];
@@ -203,7 +204,6 @@ window.addEventListener('myfit:program-updated', (e) => {
         showSyncToast(`${parts.join(' + ')} mis à jour`);
         _setMsg(`✅ Programme IA appliqué : ${parts.join(' + ')} synchronisé${parts.length > 1 ? 's' : ''}.`);
     }
-    // Rafraîchit l'onglet courant si concerné
     if (program?.workoutPlan) UI.renderWorkout(viewPort);
     if (currentView === 'nutrition' && program?.mealPlan) UI.renderNutrition(viewPort);
 });
@@ -281,7 +281,6 @@ window.AppControls = {
         UI.renderNutrition(viewPort);
     },
  
-    // Remplacement repas depuis l'onglet Nutrition
     async replaceMeal(mealIndex) {
         const profile  = CoachProfile.data;
         const mealPlan = State.data.aiMealPlan;
@@ -289,24 +288,16 @@ window.AppControls = {
  
         const card = document.getElementById(`meal-card-${mealIndex}`);
         const btn  = document.getElementById(`replace-btn-${mealIndex}`);
-        if (btn) {
-            btn.disabled = true;
-            btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> En cours...';
-        }
+        if (btn) { btn.disabled = true; btn.innerHTML = '⏳ En cours...'; }
         if (card) card.style.opacity = '0.5';
- 
         _setMsg('🔄 Le Coach cherche une alternative équivalente...');
  
         await replaceMeal(
-            mealIndex,
-            mealPlan[mealIndex],
-            profile,
+            mealIndex, mealPlan[mealIndex], profile,
             (newMeal) => {
-                // Remplace la carte dans le DOM sans re-render toute la page
                 if (card) {
                     card.style.opacity = '1';
                     card.outerHTML = UI._mealCard(newMeal, mealIndex);
-                    // Réattache le handler
                     document.getElementById(`replace-btn-${mealIndex}`)
                         ?.addEventListener('click', () => window.AppControls.replaceMeal(mealIndex));
                 }
@@ -314,7 +305,7 @@ window.AppControls = {
             },
             (err) => {
                 if (card) card.style.opacity = '1';
-                if (btn)  { btn.disabled = false; btn.innerHTML = '↺ Remplacer'; }
+                if (btn) { btn.disabled = false; btn.innerHTML = '↺ Remplacer'; }
                 _setMsg('⚠️ Impossible de remplacer ce repas. Réessaie.');
                 console.error('replaceMeal:', err);
             }
@@ -338,7 +329,7 @@ window.AppControls = {
         reader.onload = (e) => {
             const ok = State.importData(e.target.result);
             if (ok) { _setMsg('✅ Données restaurées avec succès.'); navigateTo('stats'); }
-            else      _setMsg('⚠️ Fichier invalide. Vérifie que c\'est une sauvegarde MYFIT.');
+            else _setMsg('⚠️ Fichier invalide. Vérifie que c\'est une sauvegarde MYFIT.');
         };
         reader.readAsText(file);
     },
@@ -358,4 +349,13 @@ setTimeout(() => {
             : `Bienvenue. ${stats.sessions} sessions enregistrées. On continue.`;
     }
     _setMsg(msg);
-}, 900)
+}, 900);
+ 
+// ── PWA SERVICE WORKER ────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(() => console.log('Service Worker enregistré.'))
+            .catch(err => console.warn('Erreur Service Worker:', err));
+    });
+}
