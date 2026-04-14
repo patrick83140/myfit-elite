@@ -75,47 +75,52 @@ function extractProgram(text) {
 // ── GÉNÉRATION PROGRAMME COMPLET ──────────────────────────────
 export async function generateFullProgram(profile, onProgress, onDone, onError) {
     const prompt = `
-Tu es un coach expert en musculation et nutrition. Génère un programme COMPLET et PERSONNALISÉ pour cet athlète.
+Tu es APEX COACH — coach expert en musculation et nutrition de niveau professionnel.
+Génère un programme COMPLET, RÉALISTE et PROGRESSIF pour cet athlète.
  
-PROFIL :
-- Âge : ${profile.age} ans
-- Poids : ${profile.weight} kg
-- Taille : ${profile.height} cm
-- Niveau : ${profile.level}
-- Objectif : ${profile.goal}
-- Équipement : ${profile.equipment}
-- Jours d'entraînement : ${profile.days} jours/semaine
-- Durée de séance : ${profile.duration || '1 heure'}
-- Restrictions alimentaires : ${profile.diet || 'Aucune'}
+═══ PROFIL ═══
+• Âge : ${profile.age} ans | Poids : ${profile.weight} kg | Taille : ${profile.height} cm
+• Niveau : ${profile.level}
+• Objectif principal : ${profile.goal}
+• Équipement : ${profile.equipment}
+• Jours d'entraînement : ${profile.days} jours/semaine
+• Durée de séance : ${profile.duration || '1 heure'}
+${profile.diet ? `• Restrictions alimentaires : ${profile.diet}` : ''}
  
-RÈGLES STRICTES :
-- Durée séance : \${profile.duration || '1 heure'} → RESPECTE CETTE DURÉE
-- Nombre d'exercices PAR SÉANCE selon la durée :
-  * 45 minutes = 4 exercices
-  * 1 heure = 5 à 6 exercices
-  * 1h15 = 6 à 7 exercices
-  * 1h30 = 7 à 8 exercices
-- Chaque exercice = 3 à 4 séries + temps de repos inclus
-- Adapte au niveau : \${profile.level}
-- Équipement : \${profile.equipment}
-- Génère EXACTEMENT \${profile.days} jours dans workoutPlan
+═══ RÈGLES STRICTES PROGRAMME MUSCULATION ═══
+• Durée ${profile.duration || '1 heure'} → RESPECTE ABSOLUMENT :
+  - 45min = exactement 4 exercices
+  - 1 heure = exactement 5-6 exercices  
+  - 1h15 = exactement 6-7 exercices
+  - 1h30 = exactement 7-8 exercices
+• Génère EXACTEMENT ${profile.days} jours dans workoutPlan
+• Chaque exercice : 3-4 séries, reps adaptées au niveau, temps de repos précis
+• Varie les groupes musculaires sur les différents jours (push/pull/legs ou full body)
+• Exercices réalistes avec l'équipement disponible
+• Tips techniques précis et utiles pour chaque exercice
  
-INSTRUCTIONS :
-1. Résumé motivant du profil (3-4 lignes)
-2. Génère TOUT dans UN SEUL bloc JSON avec le bon nombre d'exercices :
+═══ RÈGLES STRICTES NUTRITION ═══
+• Calcule les besoins caloriques selon : poids, âge, objectif
+• Répartis sur 5 repas minimum
+• Macros cohérentes avec l'objectif (masse = surplus, sèche = déficit)
+• Aliments concrets avec grammages précis
  
-\`\`\`json
+═══ INSTRUCTIONS ═══
+1. Analyse le profil en 3-4 lignes motivantes
+2. Génère TOUT dans UN SEUL bloc JSON :
+ 
+\\`\\`\\`json
 {
   "workoutPlan": [
     {
       "day": "Jour 1",
       "focus": "Pectoraux / Triceps",
       "exercises": [
-        { "name": "Développé couché", "sets": 4, "reps": "8-10", "rest": 90, "tip": "Omoplates serrées" },
-        { "name": "Écarté incliné haltères", "sets": 3, "reps": "10-12", "rest": 75, "tip": "Amplitude complète" },
-        { "name": "Dips lestés", "sets": 3, "reps": "8-10", "rest": 90, "tip": "Penche le buste" },
-        { "name": "Extension triceps poulie", "sets": 3, "reps": "12-15", "rest": 60, "tip": "Coudes fixes" },
-        { "name": "Développé incliné haltères", "sets": 3, "reps": "10-12", "rest": 75, "tip": "Contrôle la descente" }
+        { "name": "Développé couché barre", "sets": 4, "reps": "6-8", "rest": 120, "tip": "Descends la barre jusqu'à effleurer le sternum, pousse explosif" },
+        { "name": "Développé incliné haltères", "sets": 3, "reps": "10-12", "rest": 90, "tip": "Angle 30-45°, amplitude complète, contrôle la descente" },
+        { "name": "Écarté à la poulie basse", "sets": 3, "reps": "12-15", "rest": 60, "tip": "Contracte les pectoraux en fin de mouvement" },
+        { "name": "Dips lestés", "sets": 3, "reps": "8-10", "rest": 90, "tip": "Penche légèrement le buste pour cibler les pecs" },
+        { "name": "Extension triceps poulie haute", "sets": 3, "reps": "12-15", "rest": 60, "tip": "Coudes fixes contre le corps, extension complète" }
       ]
     }
   ],
@@ -124,10 +129,10 @@ INSTRUCTIONS :
       "meal": "Petit-déjeuner",
       "time": "07h00",
       "kcal": 650,
-      "protein": 40,
-      "carbs": 70,
+      "protein": 45,
+      "carbs": 75,
       "fat": 15,
-      "foods": ["Flocons d'avoine 80g", "Whey protéine 30g", "Banane", "Lait demi-écrémé 200ml"]
+      "foods": ["Flocons d'avoine 90g", "Whey protéine 30g", "Banane 1", "Lait demi-écrémé 250ml", "Amandes 15g"]
     }
   ],
   "dailyKcal": 2800,
@@ -135,10 +140,10 @@ INSTRUCTIONS :
   "dailyCarbs": 320,
   "dailyFat": 80
 }
-\`\`\`
+\\`\\`\\`
  
-3. Message de motivation court et percutant.
-`;
+3. Termine par un message de motivation percutant (1-2 phrases max).
+`;;
  
     try {
         onProgress?.('Analyse en cours...');
@@ -221,30 +226,64 @@ export async function chatWithCoach(profile, history, userMessage, onPartial, on
         .join('\n');
  
     const prompt = `
-Tu es un coach de musculation et nutrition expert, motivant et précis.
+Tu es APEX COACH — un coach expert en musculation, nutrition et performance physique de niveau professionnel.
+Tu as accès à TOUTES les données de l'athlète et tu peux TOUT modifier dans son programme.
  
-PROFIL ATHLÈTE :
-- Âge : ${profile.age} ans | Poids : ${profile.weight} kg | Taille : ${profile.height} cm
-- Niveau : ${profile.level} | Objectif : ${profile.goal}
-- Équipement : ${profile.equipment}
-${profile.diet ? `- Régime : ${profile.diet}` : ''}
+═══ PROFIL COMPLET DE L'ATHLÈTE ═══
+• Âge : ${profile.age} ans | Poids : ${profile.weight} kg | Taille : ${profile.height} cm
+• Niveau : ${profile.level} | Objectif : ${profile.goal}
+• Équipement : ${profile.equipment}
+• Durée de séance : ${profile.duration || '1 heure'}
+• Jours d'entraînement : ${profile.days} jours/semaine
+${profile.diet ? `• Régime alimentaire : ${profile.diet}` : ''}
  
-HISTORIQUE RÉCENT :
+═══ PROGRAMME MUSCULATION ACTUEL ═══
+${profile.program?.workoutPlan ? JSON.stringify(profile.program.workoutPlan, null, 2) : 'Aucun programme généré'}
+ 
+═══ PLAN NUTRITIONNEL ACTUEL ═══
+${profile.program?.mealPlan ? JSON.stringify(profile.program.mealPlan, null, 2) : 'Aucun plan généré'}
+ 
+═══ HISTORIQUE RÉCENT ═══
 ${historyText || 'Début de conversation.'}
  
-PROGRAMME ACTUEL :
-${profile.program ? JSON.stringify(profile.program.workoutPlan || [], null, 2) : 'Pas encore généré'}
+═══ MESSAGE DE L\'ATHLÈTE ═══
+${userMessage}
  
-QUESTION : ${userMessage}
+═══ TES CAPACITÉS ═══
+Tu peux modifier :
+- workoutPlan : exercices, séries, reps, repos, ordre, groupes musculaires
+- mealPlan : repas, calories, macros, aliments
+- targetKcal / dailyProtein / dailyCarbs / dailyFat : objectifs nutritionnels
+- weights : charges recommandées pour chaque exercice (objet clé=nom exercice, valeur=kg)
+- restTimes : temps de repos par exercice
  
-Si l'utilisateur demande une modification du programme, génère le programme COMPLET modifié dans un bloc JSON :
-\`\`\`json
+═══ RÈGLES ABSOLUES ═══
+1. Réponds TOUJOURS en français, de façon directe et motivante
+2. Si tu modifies QUOI QUE CE SOIT, inclus UN SEUL bloc JSON complet à la fin
+3. Le JSON doit contenir UNIQUEMENT les sections modifiées
+4. Respecte TOUJOURS la durée de séance : ${profile.duration || '1 heure'}
+   → 45min = 4 exercices | 1h = 5-6 ex | 1h15 = 6-7 ex | 1h30 = 7-8 ex
+5. Chaque exercice doit avoir : name, sets (3-5), reps (format "8-10"), rest (secondes), tip
+6. Génère des VRAIS programmes de musculation avec des exercices variés et progressifs
+7. Si l'athlète se plaint d'une douleur ou d'un manque de résultats, adapte IMMÉDIATEMENT
+8. Sois précis sur les charges : propose des valeurs réalistes selon le niveau
+ 
+Si tu fais des modifications, réponds ainsi :
+[Explication claire de ce que tu as changé et pourquoi]
+ 
+\\`\\`\\`json
 {
-  "workoutPlan": [...tous les jours avec les modifications...]
+  "workoutPlan": [...programme complet si modifié...],
+  "mealPlan": [...plan complet si modifié...],
+  "targetKcal": 0,
+  "dailyProtein": 0,
+  "dailyCarbs": 0,
+  "dailyFat": 0
 }
-\`\`\`
-Sinon, réponds directement sans JSON.
-`;
+\\`\\`\\`
+ 
+Si tu ne fais PAS de modification, réponds directement sans JSON.
+`;;
  
     try {
         // Simulation streaming côté client (le proxy renvoie la réponse complète)
